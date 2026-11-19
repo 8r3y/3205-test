@@ -25,6 +25,16 @@ describe("toKop / fromKop", () => {
     expect(toKop(10.999)).toBe(1099);
   });
 
+  it("не теряет копейку из-за двоичной плавающей точки", () => {
+    // Math.floor(x * 100) даёт здесь на копейку меньше
+    expect(toKop(19.99)).toBe(1999);
+    expect(toKop(0.29)).toBe(29);
+    expect(toKop(1.15)).toBe(115);
+    expect(toKop(4.35)).toBe(435);
+    expect(toKop(4723.9)).toBe(472390);
+    expect(toKop(parseRub("1217.61"))).toBe(121761);
+  });
+
   it("копейки в рубли", () => {
     expect(fromKop(250000)).toBe(2500);
     expect(fromKop(1099)).toBe(10.99);
