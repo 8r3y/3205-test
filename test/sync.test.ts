@@ -42,4 +42,15 @@ describe("POST /sync", () => {
     expect(Number(rows[0].amount_kop)).toBe(250000);
     expect(rows[0].created_at.toISOString()).toBe("2026-02-10T21:30:00.000Z");
   });
+
+  it("сохраняет оплаченную сумму со скидкой; без полей скидки — вся сумма", async () => {
+    const withDiscount = apiOrder({ amount: "2974.00", discountPercent: "20", amountPaid: 2379.2 });
+    const legacy = apiOrder({ amount: 500 });
+    ctx.api.pages.set(null, { items: [withDiscount, legacy], nextCursor: null });
+    await ctx.app.inject({ method: "POST", url: "/sync" });
+    const { rows } = await ctx.db.query(`SELECT id, amount_kop, amount_paid_kop FROM orders ORDER BY id`);
+    const byId = Object.fromEntries(rows.map((r) => [r.id, [Number(r.amount_kop), Number(r.amount_paid_kop)]]));
+    expect(byId[withDiscount.id]).toEqual([297400, 237920]);
+    expect(byId[legacy.id]).toEqual([50000, 50000]);
+  });
 });
